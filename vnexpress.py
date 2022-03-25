@@ -1,5 +1,4 @@
-from lib.utils import readData, initDriver, clearFile, writeFileTxt
-from lib.fblogin import checkLiveCookie
+from lib.utils import initDriver, clearFile, writeFileTxt
 from lib.crawlcomment import *
 import argparse
 from pathlib import Path
@@ -14,22 +13,20 @@ savePath = Path(args['save_file'])
 savePath.touch(exist_ok=True)
 clearFile(args['save_file'])
 
-driver = webdriver.Chrome('lib/chromedriver.exe')
+driver = initDriver()
 
 
 driver.get('https://vnexpress.net/')
-sleep(5)
 
 allLinks = []
 allPosts = driver.find_elements(By.CLASS_NAME, 'title-news')
 
 for post in allPosts:
     allLinks.append(post.find_element(By.XPATH, './/a').get_attribute('href'))
-
+ 
 # allTexts = []
-for link in allLinks[:min(len(allLinks, args['num_post']))]:
+for link in allLinks[:min(len(allLinks), args['num_post'])]:
     driver.get(link)
-    sleep(2)
     allCmts = set()
     num_cmts = len(allCmts)
     while num_cmts < args['num_cmt']:
@@ -38,16 +35,16 @@ for link in allLinks[:min(len(allLinks, args['num_post']))]:
         except:
             break
         allCmts.update(cmts)
-        # if len(allCmts) == num_cmts:
-        #     break
-        # num_cmts = len(allCmts)
+        if (num_cmts == len(allCmts)):
+            break
+        num_cmts = len(allCmts)
         try:
-            btn = driver.find_element(By.ID, 'show_more_coment')
+            btn = driver.find_element(By.XPATH, '//*[@id="box_comment_vne"]/div/div[8]/a')
         except:
             break
         driver.execute_script ("arguments[0].click();",btn)
 
-    for cmt in list(allCmts):
+    for cmt in list(allCmts)[:args['num_cmt']]:
         try:
             cmt_text = cmt.find_element(By.XPATH, './/p[contains(@class, "full_content")]')
         except:
