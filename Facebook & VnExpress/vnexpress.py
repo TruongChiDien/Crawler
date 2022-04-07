@@ -3,6 +3,7 @@ from lib.crawlcomment import *
 import argparse
 from pathlib import Path
 import os
+import glob
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_post', type=int, help='number post to get crawling', default=20)
@@ -17,8 +18,10 @@ driver = initDriver()
 
 driver.get('https://vnexpress.net/')
 
-# if args['del_old']:
-#     os.system('rm -r ' + savePath)
+if args['del_old']:
+    files = glob.glob(savePath + '/*')
+    for f in files:
+        os.remove(f)
 
 allLinks = []
 allPosts = driver.find_elements(By.CLASS_NAME, 'title-news')
@@ -34,19 +37,23 @@ for idx, link in enumerate(allLinks[:n]):
 
     driver.get(link)
 
-    contentTags = driver.find_element(By.CLASS_NAME, 'sidebar-1')
+    try:
+        contentTags = driver.find_element(By.CLASS_NAME, 'sidebar-1')
+        # writeFileTxt(filePath, contentTags.text)
 
-    title = contentTags.find_element(By.XPATH, './/*[@class="title-detail"')
-    writeFileTxt(filePath, title.text)
+        title = contentTags.find_element(By.XPATH, './/*[@class="title-detail"]')
+        writeFileTxt(filePath, title.text)
 
-    description = contentTags.find_element(By.XPATH, './/*[@class="description"')
-    writeFileTxt(filePath, description.text)
+        description = contentTags.find_element(By.XPATH, './/*[@class="description"]')
+        writeFileTxt(filePath, description.text)
 
+        allContentTags = contentTags.find_elements(By.XPATH, './/p')
+        for content in allContentTags:
+            writeFileTxt(filePath, content.text)
 
-    allContentTags = contentTags.find_elements(By.XPATH, './/p')
-    for content in allContentTags:
-        writeFileTxt(filePath, content.text)
-
+    except:
+        print('Post not include text content')
+        
     allCmts = set()
     num_cmts = len(allCmts)
     while num_cmts < args['num_cmt']:
