@@ -1,6 +1,7 @@
 from time import sleep
 from selenium.webdriver.common.by import By
 from lib.utils import *
+import random
 
 
 
@@ -20,11 +21,17 @@ def getContentComment(driver, filePath='data/comments.txt'):
     except:
         print("error get link")
 
-
+def getContentPost(driver, file_path):
+    try:
+        p_tag = driver.find_element(By.CLASS_NAME, 'bi')
+        writeFileTxt(file_path, p_tag.text)
+    except:
+        print('Get content post error!')
 
 def getAmountOfComments(driver,postId, numberCommentTake, filePath='data/comments.txt'):
     try:
         driver.get("https://mbasic.facebook.com/" + str(postId))
+        getContentPost(driver, filePath)
         sumLinks = getContentComment(driver, filePath)
         while(len(sumLinks) < numberCommentTake):
             try:
@@ -34,6 +41,9 @@ def getAmountOfComments(driver,postId, numberCommentTake, filePath='data/comment
                     sumLinks.extend(getContentComment(driver, filePath))
                 else:
                     break
+
+                sleep(random.randint(0, 2))
+                
             except:
                 print('Error when cralw content comment')
     except:
